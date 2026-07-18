@@ -6,15 +6,27 @@ function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleLogin = (e) => {
+  async function sendDataToBackend(e) {
+    
     e.preventDefault() 
-    
-    console.log("Attempting to login with:")
-    console.log("Username:", username)
-    console.log("Password:", password)
-    
-    
-  }
+    const payload = {
+      user: username,
+      pass: password
+    };
+
+    try{
+      const response = await fetch('http://127.0.0', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+    catch (error){
+      console.error('Backend failed')
+    }
+  };
   const containerStyle = {
     backgroundImage: `url(${bgImage})`,
     backgroundSize: 'cover',
@@ -31,7 +43,7 @@ function App() {
     height: '50%',
     backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent white
     backdropFilter: 'blur(10px)',                // This creates the hazy effect
-    padding: '100px',
+    padding: '50px',
     borderRadius: '16px',
     border: '5px solid rgb(0, 255, 242)',
     color: '#fff',
@@ -40,23 +52,58 @@ function App() {
   const imageStyle = {
     width: '40px',
     height: 'auto',
-    objectfit: 'contain'
+    objectFit: 'contain'
   }
   const textBoxStyle = {
     width: '100%',
     padding: '12px 16px',
     borderRadius: '10px',
     border: '3px solid rgb(0, 247, 255)',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgb(0, 255, 234)',
     color: '#ffffff',
-    fontSize: '16px',
+    fontSize: '13px',
     outline: 'none',
     boxSizing: 'border-box'
+    
   };
+  const buttonStyle = {
+    padding: '12px 20px',
+    borderRadius: '10px',
+    border: 'none',
+    backgroundColor: '#007bff',
+    color: '#ffffff',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    width: '100%',
+    marginTop: '20px',
+    transition: 'background-color 0.2s ease'
+  }
 
   return <div style={containerStyle}>
     <div style={hazyCardStyle}>
-      
+      <form onSubmit={sendDataToBackend}>
+        <input
+          type="text"
+          style={{...textBoxStyle, marginBottom: '20px'}}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder='Put your user name here'
+        />
+        <input
+          type='password'
+          style={textBoxStyle}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder='make a strong password'
+        />
+        <button
+          type='submit'
+          style={buttonStyle}
+        >
+          Log In
+        </button>
+      </form>
     </div>
   </div>
 }
