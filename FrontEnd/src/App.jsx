@@ -4,11 +4,15 @@ import bgImage from './assets/asset3.jpg'
 import ParticleBackground from "./ParticleBackground.jsx";
 import './index.css';
 function App() {
+  // all state declaration
+
   const [currentView, setCurrentView] = useState(0)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [mouseHovered, setMouseHovered] = useState(false)
   const [mouseHovered1, setMouseHovered1] = useState(false)
+  
+  // function for sending backend massage
   async function sendDataToBackend(e) {
     
     e.preventDefault() 
@@ -18,19 +22,52 @@ function App() {
     };
 
     try{
-      const response = await fetch('http://127.0.0.1', {
+      const response = await fetch('http://127.0.0.1:8000/login', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
         },
         body: JSON.stringify(payload)
       });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Success! Backend received:", data);
+        alert("Welcome, " + username + "!");
+        setCurrentView(3); 
+      } else {
+        alert(data.message);
+      }
     }
     catch (error){
       console.error('Backend failed')
     }
   };
-  
+  async function loginToBackend(e) {
+    e.preventDefault()
+    const payload = {
+      user: username,
+      pass: password
+    };
+    try {
+      const response = await fetch('http://127.0.0.1:8000/auth', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Login successful! Welcome back, " + username + "!");
+        setCurrentView(3); //wherever the logged in view is
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Backend failed');
+    }
+  };
+
   if (currentView === 0) {
     return <Home setCurrentView={setCurrentView} mouseHovered={mouseHovered} setMouseHovered={setMouseHovered} mouseHovered1={mouseHovered1} setMouseHovered1={setMouseHovered1} />
   }
@@ -42,7 +79,7 @@ function App() {
         password={password}
         setUsername={setUsername}
         setPassword={setPassword}
-        sendDataToBackend={sendDataToBackend}
+        sendDataToBackend={loginToBackend}
         setCurrentView={setCurrentView}
         mouseHovered={mouseHovered}
         setMouseHovered={setMouseHovered}
@@ -50,7 +87,19 @@ function App() {
     )
   }
 
-  return <SignUp setCurrentView={setCurrentView} mouseHovered={mouseHovered} setMouseHovered={setMouseHovered} />
+  return (
+    <SignUp
+      setCurrentView={setCurrentView}
+      username={username}
+      password={password}
+      setUsername={setUsername}
+      setPassword={setPassword}
+      sendDataToBackend={sendDataToBackend}
+      mouseHovered={mouseHovered}
+      setMouseHovered={setMouseHovered}
+    />
+  )
+
 }
 
 
@@ -130,16 +179,16 @@ function Home({setCurrentView, mouseHovered, setMouseHovered, mouseHovered1, set
       <form>
         <button 
         style={buttonStyle1}
-        type='submit'
-        onClick={() => setCurrentView(1)}
+        type='button'
+        onClick={() => {setCurrentView(1); setMouseHovered(false)}}
         onMouseEnter={() => setMouseHovered(true)}
         onMouseLeave={() => setMouseHovered(false)}
         >
           Log In
         </button>
         <button style={buttonStyle2}
-        type='submit'
-        onClick={() => setCurrentView(2)}
+        type='button'
+        onClick={() => {setCurrentView(2); setMouseHovered1(false)}}
         onMouseEnter={() => setMouseHovered1(true)}
         onMouseLeave={() => setMouseHovered1(false)}
         >
@@ -148,8 +197,7 @@ function Home({setCurrentView, mouseHovered, setMouseHovered, mouseHovered1, set
       </form>
     </div>
   </div>
-}
-
+};
 function LogIn ({ username, password, setUsername, setPassword, sendDataToBackend, setCurrentView, mouseHovered, setMouseHovered }) {
     const containerStyle1 = {
     backgroundImage: `url(${bgImage})`,
@@ -330,6 +378,6 @@ function SignUp({ setCurrentView, username, password, setUsername, setPassword, 
     </div>
   </div>
   )
-}
+};
 
 export default App;

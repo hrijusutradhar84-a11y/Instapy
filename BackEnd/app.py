@@ -28,8 +28,7 @@ init_db()
 
 
 # --- THE API ENDPOINT ---
-# This matches the exact URL and POST method from your React fetch()
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST']) # 
 def receive_login():
     # 1. Catch the JSON payload from React
     data = request.json
@@ -40,39 +39,62 @@ def receive_login():
 
     #eligibilty check
     pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[_@$])[A-Za-z\d_@$]{8,}$"
-    if re.fullmatch(pattern, plain_password):
-        
-        password_bytes = plain_password.encode('utf-8')
-        salt = bcrypt.gensalt()
-        hashed_password = bcrypt.hashpw(password_bytes, salt)
+    if plain_password and username:
+        if re.fullmatch(pattern, plain_password) and len(username) >=3:
+            # password hashing for security
+            password_bytes = plain_password.encode('utf-8') #storing as byte
+            salt = bcrypt.gensalt()
+            hashed_password = bcrypt.hashpw(password_bytes, salt)
 
-        try:
-            # 4. Connect to SQLite and save the user
-            conn = sqlite3.connect('users.db')
-            cursor = conn.cursor()
-            
-            # Insert the data into our table
-            cursor.execute(
-                'INSERT INTO accounts (username, password) VALUES (?, ?)', 
-                (username, hashed_password)
-            )
-            
-            conn.commit()
-            conn.close()
+            try:
+                #Connect to SQLite and save the user
+                conn = sqlite3.connect('users.db')
+                cursor = conn.cursor()
+                
+                # Insert the data into our table
+                cursor.execute(
+                    'INSERT INTO accounts (username, password) VALUES (?, ?)', 
+                    (username, hashed_password.decode('utf-8'))
+                )
+                #saving and hanging up the connection
+                conn.commit()
 
-            
-            # Send a success message back to React
-            return jsonify({"status": "success", "message": "User registered successfully"}), 200
+                # Send a success message back to React (as a json)
+                return jsonify({"status": "success", "message": "User registered successfully"}), 200
 
-        except sqlite3.IntegrityError:
-            # If the username already exists -> an error
-            print(f"Failed: User {username} already exists.")
-            return jsonify({"status": "error", "message": "Username already taken"}), 400
+            except sqlite3.IntegrityError:
+                # If the username already exists -> an error
+                print(f"Failed: User {username} already exists.")
+                return jsonify({"status": "error", "message": "Username already taken"}), 400
+            finally:
+                conn.close()
+        else:
+            return jsonify({"status": "error", "message": "WEAK PASSWORD"}), 400
     else:
-        return jsonify("WEAK PASSWORD"), 400
-
+        return jsonify({"status": "error", "message": "Username and password are required"}), 400
     
 
+@app.route('/auth', methods=['POST'])
+def authenticate():
+    data = request.json
+    username = data.get('user')
+    plain_password = data.get('pass')
+    
+    if not username or not plain_password:
+        return jsonify({"status": "error", "message": "Credentials required"}), 400
+
+    conn = sqlite3.connect('users.db')
+    try:
+        cursor = conn.cursor()
+        cursor.execute('SELECT password FROM accounts WHERE username = ?', (username,))
+        row = cursor.fetchone()
+        
+        if row and bcrypt.checkpw(plain_password.encode('utf-8'), row[0].encode('utf-8')):
+            return jsonify({"status": "success", "message": "Login successful"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Invalid username or password"}), 401
+    finally:
+        conn.close()
 
 
 

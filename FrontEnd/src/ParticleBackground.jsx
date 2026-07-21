@@ -10,7 +10,7 @@ function ParticleBackground() {
       },
       background: {
         color: {
-          value: "transparent",
+          value: "transparent", // makes the particle canvas transparent
         },
       },
       fpsLimit: 120,
@@ -25,10 +25,10 @@ function ParticleBackground() {
           repulse: { distance: 100, duration: 0.4 },
         },
       },
-      particles: {
-        color: { value: "#ff0000ff" },
+      particles: { // details of the particle
+        color: { value: "#000000ff" },
         links: {
-          color: "#f30c0cff",
+          color: "#000000ff",
           distance: 150,
           enable: true,
           opacity: 0.5,
